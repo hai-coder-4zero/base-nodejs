@@ -13,6 +13,8 @@ const postRoutes = require("./routes/posts");
 const categoryRoutes = require("./routes/categories");
 const commentRoutes = require("./routes/comments");
 const uploadRoutes = require("./routes/upload");
+const emailSdkRoutes = require("./routes/email-sdk");
+const emailSmtpRoutes = require("./routes/email-smtp");
 
 // Import middleware
 const { errorHandler } = require("./middleware/error");
@@ -59,6 +61,8 @@ app.use("/api/posts", postRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/email-sdk", emailSdkRoutes);
+app.use("/api/email-smtp", emailSmtpRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
