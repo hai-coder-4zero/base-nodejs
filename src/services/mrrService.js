@@ -2,6 +2,9 @@ import dotenv from "dotenv";
 import { MRR_API_KEY, MRR_API_SECRET, MRR_API_URL } from "../configs/env.js";
 dotenv.config();
 
+// MiningRigRentals
+// https://www.miningrigrentals.com/apidocv2
+
 async function createMRRSignature(message) {
   const key = await crypto.subtle.importKey(
     "raw",

@@ -54,7 +54,7 @@ router.post("/pool/test", async (req, res) => {
 /**
  * ⚙️ 3. Get rigs list (filter by algo, region, price...)
  */
-router.get("/rigs", async (req, res) => {
+router.get("/rentals", async (req, res) => {
   try {
     const { algo, region } = req.query;
     if (!algo) return res.status(400).json({ error: "Missing algo param" });
@@ -65,7 +65,7 @@ router.get("/rigs", async (req, res) => {
       ...(region ? { [`region.${region}`]: "true" } : {}),
     });
 
-    const data = await callMRR(`/rig?${query.toString()}`);
+    const data = await callMRR(`/rental?${query.toString()}`);
     res.json({ rigs: data });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -75,7 +75,7 @@ router.get("/rigs", async (req, res) => {
 /**
  * 🤝 4. Rent rig with pool
  */
-router.post("/rent", async (req, res) => {
+router.post("/rental", async (req, res) => {
   try {
     const { rigId, host, port, user, pass } = req.body;
     if (!rigId || !host || !port || !user)
