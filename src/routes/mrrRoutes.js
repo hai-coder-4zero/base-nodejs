@@ -3,14 +3,34 @@ import { callMRR } from "../services/mrrService.js";
 
 const router = Router();
 
+function checkMissingFields(obj, fields, res) {
+  for (const field of fields) {
+    if (
+      obj[field] === undefined ||
+      obj[field] === null ||
+      (typeof obj[field] === "string" && obj[field].trim() === "")
+    ) {
+      res.status(400).json({ error: "Missing required fields" });
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * 🧱 1. Create pool
  */
 router.post("/pool", async (req, res) => {
   try {
     const { type, name, host, port, user, pass } = req.body;
-    if (!type || !name || !host || !port || !user)
-      return res.status(400).json({ error: "Missing required fields" });
+    if (
+      checkMissingFields(
+        req.body,
+        ["type", "name", "host", "port", "user"],
+        res
+      )
+    )
+      return;
 
     const result = await callMRR("/account/pool", "PUT", {
       type,
@@ -41,13 +61,19 @@ router.post("/pool", async (req, res) => {
  */
 router.post("/pool/test", async (req, res) => {
   try {
-    const { algo, host, port, user, pass } = req.body;
-    if (!algo || !host || !port)
-      return res.status(400).json({ error: "Missing required fields" });
+    const { method, type, host, port, user, pass } = req.body;
+    if (
+      checkMissingFields(
+        req.body,
+        ["method", "type", "host", "port", "user", "pass"],
+        res
+      )
+    )
+      return;
 
     const result = await callMRR("/account/pool/test", "PUT", {
-      method: "full",
-      type: algo,
+      method,
+      type,
       host,
       port,
       user,
@@ -69,17 +95,14 @@ router.post("/pool/test", async (req, res) => {
 });
 
 /**
- * ⚙️ 3. Get rigs list (filter by algo, region, price...)
+ * ⚙️ 3. Get rigs list (filter by type, region, price...)
  */
 router.get("/rigs", async (req, res) => {
   try {
-    const { algo, region } = req.query;
-    if (!algo) return res.status(400).json({ error: "Missing algo param" });
+    const { type } = req.query;
 
     const query = new URLSearchParams({
-      type: algo,
-      count: "20",
-      ...(region ? { [`region.${region}`]: "true" } : {}),
+      type,
     });
 
     const result = await callMRR(`/rig?${query.toString()}`);
@@ -98,19 +121,19 @@ router.get("/rigs", async (req, res) => {
 });
 
 /**
- * 🤝 4. Rent rig with pool
+ * 🤝 4. Rent rig
  */
 router.post("/rental", async (req, res) => {
   try {
-    const { rigId, host, port, user, pass } = req.body;
-    if (!rigId || !host || !port || !user)
-      return res.status(400).json({ error: "Missing required fields" });
+    const { rig, length, currency } = req.body;
 
-    const result = await callMRR(`/rental/${rigId}/pool`, "PUT", {
-      host,
-      port,
-      user,
-      pass,
+    if (checkMissingFields(req.body, ["rig", "length", "currency"], res))
+      return;
+
+    const result = await callMRR("/rental", "PUT", {
+      rig,
+      length,
+      currency,
     });
 
     res.json({ message: "Rig rented successfully", result });
@@ -128,7 +151,45 @@ router.post("/rental", async (req, res) => {
 });
 
 /**
- * 📡 5. Check rental status
+ * 🤝 5. Rent rig with pool
+ */
+router.post("/rental-pool", async (req, res) => {
+  try {
+    const { rigId, host, port, user, pass, priority } = req.body;
+
+    if (
+      checkMissingFields(
+        req.body,
+        ["rigId", "host", "port", "user", "pass", "priority"],
+        res
+      )
+    )
+      return;
+
+    const result = await callMRR(`/rental/${rigId}/pool`, "PUT", {
+      host,
+      port,
+      user,
+      pass,
+      priority,
+    });
+
+    res.json({ message: "Rig rented with pool successfully", result });
+    if (
+      result?.success === false &&
+      result?.data?.message?.toLowerCase().includes("not authenticated")
+    ) {
+      return res.status(401).json({
+        error: "Not Authenticated: Please check your MRR API credentials.",
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 📡 6. Check rental status
  */
 router.get("/rental/:id", async (req, res) => {
   try {
