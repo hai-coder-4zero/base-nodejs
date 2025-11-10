@@ -8,12 +8,12 @@ const router = Router();
  */
 router.post("/pool", async (req, res) => {
   try {
-    const { algo, name, host, port, user, pass } = req.body;
-    if (!algo || !name || !host || !port || !user)
+    const { type, name, host, port, user, pass } = req.body;
+    if (!type || !name || !host || !port || !user)
       return res.status(400).json({ error: "Missing required fields" });
 
-    const data = await callMRR("/account/pool", "PUT", {
-      type: algo,
+    const result = await callMRR("/account/pool", "PUT", {
+      type,
       name,
       host,
       port,
@@ -21,7 +21,16 @@ router.post("/pool", async (req, res) => {
       pass,
     });
 
-    res.json({ message: "Pool created", data });
+    if (
+      result?.success === false &&
+      result?.data?.message?.toLowerCase().includes("not authenticated")
+    ) {
+      return res.status(401).json({
+        error: "Not Authenticated: Please check your MRR API credentials.",
+      });
+    }
+
+    res.json({ message: "Pool created", result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -36,7 +45,7 @@ router.post("/pool/test", async (req, res) => {
     if (!algo || !host || !port)
       return res.status(400).json({ error: "Missing required fields" });
 
-    const data = await callMRR("/account/pool/test", "PUT", {
+    const result = await callMRR("/account/pool/test", "PUT", {
       method: "full",
       type: algo,
       host,
@@ -45,7 +54,15 @@ router.post("/pool/test", async (req, res) => {
       pass,
     });
 
-    res.json({ message: "Pool test result", data });
+    res.json({ message: "Pool test result", result });
+    if (
+      result?.success === false &&
+      result?.data?.message?.toLowerCase().includes("not authenticated")
+    ) {
+      return res.status(401).json({
+        error: "Not Authenticated: Please check your MRR API credentials.",
+      });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -54,7 +71,7 @@ router.post("/pool/test", async (req, res) => {
 /**
  * ⚙️ 3. Get rigs list (filter by algo, region, price...)
  */
-router.get("/rentals", async (req, res) => {
+router.get("/rigs", async (req, res) => {
   try {
     const { algo, region } = req.query;
     if (!algo) return res.status(400).json({ error: "Missing algo param" });
@@ -65,8 +82,16 @@ router.get("/rentals", async (req, res) => {
       ...(region ? { [`region.${region}`]: "true" } : {}),
     });
 
-    const data = await callMRR(`/rental?${query.toString()}`);
-    res.json({ rigs: data });
+    const result = await callMRR(`/rig?${query.toString()}`);
+    res.json({ rigs: result });
+    if (
+      result?.success === false &&
+      result?.data?.message?.toLowerCase().includes("not authenticated")
+    ) {
+      return res.status(401).json({
+        error: "Not Authenticated: Please check your MRR API credentials.",
+      });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -81,14 +106,22 @@ router.post("/rental", async (req, res) => {
     if (!rigId || !host || !port || !user)
       return res.status(400).json({ error: "Missing required fields" });
 
-    const data = await callMRR(`/rental/${rigId}/pool`, "PUT", {
+    const result = await callMRR(`/rental/${rigId}/pool`, "PUT", {
       host,
       port,
       user,
       pass,
     });
 
-    res.json({ message: "Rig rented successfully", data });
+    res.json({ message: "Rig rented successfully", result });
+    if (
+      result?.success === false &&
+      result?.data?.message?.toLowerCase().includes("not authenticated")
+    ) {
+      return res.status(401).json({
+        error: "Not Authenticated: Please check your MRR API credentials.",
+      });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -99,8 +132,16 @@ router.post("/rental", async (req, res) => {
  */
 router.get("/rental/:id", async (req, res) => {
   try {
-    const data = await callMRR(`/rental/${req.params.id}`);
-    res.json({ rentalStatus: data });
+    const result = await callMRR(`/rental/${req.params.id}`);
+    res.json({ rentalStatus: result });
+    if (
+      result?.success === false &&
+      result?.data?.message?.toLowerCase().includes("not authenticated")
+    ) {
+      return res.status(401).json({
+        error: "Not Authenticated: Please check your MRR API credentials.",
+      });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

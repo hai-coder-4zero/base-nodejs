@@ -33,3 +33,9 @@ export const AWS_SES_HR_EMAIL = process.env.AWS_SES_HR_EMAIL || "";
 export const MRR_API_URL = process.env.MRR_API_URL || "";
 export const MRR_API_KEY = process.env.MRR_API_KEY || "";
 export const MRR_API_SECRET = process.env.MRR_API_SECRET || "";
+
+//Pool
+export const POOL_STRATUM_HOSTNAME = process.env.POOL_STRATUM_HOSTNAME || "";
+export const POOL_STRATUM_PORT = process.env.POOL_STRATUM_PORT || "";
+export const POOL_USERNAME = process.env.POOL_USERNAME || "";
+export const POOL_PASSWORD = process.env.POOL_PASSWORD || "";

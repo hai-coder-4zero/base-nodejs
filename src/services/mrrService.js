@@ -3,7 +3,7 @@ import { MRR_API_KEY, MRR_API_SECRET, MRR_API_URL } from "../configs/env.js";
 dotenv.config();
 
 // MiningRigRentals
-// https://www.miningrigrentals.com/apidocv2
+// https://www.miningrigrentals.com/api/v2
 
 async function createMRRSignature(message) {
   const key = await crypto.subtle.importKey(
@@ -41,12 +41,14 @@ async function callMRR(endpoint, method = "GET", body = null) {
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data = await res.json();
+  const result = await res.json();
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${data?.message || "Unknown error"}`);
+    throw new Error(
+      `HTTP ${res.status}: ${result?.data?.message || "Unknown error"}`
+    );
   }
 
-  return data;
+  return result;
 }
 
 export { callMRR };
